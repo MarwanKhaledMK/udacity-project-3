@@ -1,0 +1,74 @@
+version: 2.1
+
+commands:
+  install_awscli:
+    description: Install AWS CLI v2
+    steps:
+      - run:
+          name: Install AWS CLI v2
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+  install_ansible:
+    description: Install Ansible
+    steps:
+      - run:
+          name: Install Ansible
+          command: |
+            sudo apt update
+            sudo apt install software-properties-common -y
+            sudo add-apt-repository --yes --update ppa:ansible/ansible
+            sudo apt install ansible -y
+  install_nodejs:
+    description: Install Node.js 14
+    steps:
+      - run:
+          name: Install Node.js 14 LTS
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+            sudo apt install -y nodejs
+           
+jobs:
+  build-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - run:
+          name: Build front-end
+          command: |
+            cd frontend
+            npm install
+            npm run build
+      - save_cache:
+          paths: [frontend/node_modules]
+          key: frontend-build
+
+  build-backend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys: [backend-build]
+      - run:
+          name: Back-end build
+          command: |
+            cd backend
+            npm install
+            npm run build
+      - save_cache:
+          paths: [backend/node_modules]
+          key: backend-build
+
+              
+
+workflows:
+  default:
+    jobs:
+      - build-frontend
+      - build-backend
+      
